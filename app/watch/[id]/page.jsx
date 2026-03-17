@@ -3,10 +3,22 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Player from "../../components/Player";
+import FeedViewer from "../../components/FeedViewer";
+import TextViewer from "../../components/TextViewer";
 import WalletPanel from "../../components/WalletPanel";
 import TxLog from "../../components/TxLog";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "";
+
+function ContentViewer({ content, isPlaying }) {
+  if (content.type === "feed") {
+    return <FeedViewer isPlaying={isPlaying} entries={content.entries} />;
+  }
+  if (content.type === "analysis") {
+    return <TextViewer isPlaying={isPlaying} body={content.body} />;
+  }
+  return <Player isPlaying={isPlaying} videoUrl={content.videoUrl} />;
+}
 
 export default function WatchPage() {
   const { id } = useParams();
@@ -95,6 +107,13 @@ export default function WatchPage() {
     );
   }
 
+  const typeLabel =
+    content.type === "feed"
+      ? "Live Feed"
+      : content.type === "analysis"
+      ? "Analysis"
+      : "Video";
+
   return (
     <main className="min-h-screen text-white">
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -108,11 +127,21 @@ export default function WatchPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             <div className="glass p-2 rounded-xl">
-              <Player isPlaying={isPlaying} videoUrl={content.videoUrl} />
+              <ContentViewer content={content} isPlaying={isPlaying} />
             </div>
 
             <div>
-              <h1 className="text-2xl font-semibold mb-1">{content.title}</h1>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-semibold">{content.title}</h1>
+                <span className="text-[10px] uppercase tracking-wider text-gray-500 border border-neutral-700 px-1.5 py-0.5 rounded">
+                  {typeLabel}
+                </span>
+                {content.isAgent && (
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500 border border-neutral-700 px-1.5 py-0.5 rounded">
+                    Agent
+                  </span>
+                )}
+              </div>
               <p className="text-gray-400 text-sm leading-relaxed">
                 {content.description}
               </p>

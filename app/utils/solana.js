@@ -16,15 +16,10 @@ import {
 
 const WSOL_DECIMALS = 9;
 
-/**
- * Wraps SOL into wSOL and approves the gateway as a delegate — all in one tx.
- *
- * Steps inside the transaction:
- * 1. Create the user's wSOL ATA if it doesn't exist
- * 2. Transfer SOL into the ATA (wrapping)
- * 3. Sync the native account balance
- * 4. Approve the gateway to spend up to `amountLamports` of wSOL
- */
+export function isNativeMint(mintStr) {
+  return !mintStr || mintStr === "" || mintStr === "WSOL" || mintStr === NATIVE_MINT.toString();
+}
+
 export async function wrapAndApprove({
   userPublicKey,
   sendTransaction,
@@ -73,4 +68,58 @@ export async function wrapAndApprove({
   const sig = await sendTransaction(tx, connection, { skipPreflight: false });
   await connection.confirmTransaction(sig, "confirmed");
   return sig;
+}
+
+export async function approveToken({
+  userPublicKey,
+  sendTransaction,
+  connection,
+  gatewayPubkey,
+  tokenMint,
+  tokenDecimals,
+  amount,
+}) {
+  if (!gatewayPubkey) throw new Error("Missing NEXT_PUBLIC_GATEWAY_PUBKEY");
+  if (!tokenMint) throw new Error("Missing token mint");
+
+  const user = new PublicKey(userPublicKey);
+  const gateway = new PublicKey(gatewayPubkey);
+  const mint = new PublicKey(tokenMint);
+  const userAta = await getAssociatedTokenAddress(mint, user);
+
+  const tx = new Transaction();
+
+  const ataInfo = await connection.getAccountInfo(userAta);
+  if (!ataInfo) {
+    tx.add(
+      createAssociatedTokenAccountInstruction(user, userAta, user, mint)
+    );
+  }
+
+  tx.add(
+    createApproveCheckedInstruction(
+      userAta,
+      mint,
+      gateway,
+      user,
+      amount,
+      tokenDecimals
+    )
+  );
+
+  const sig = await sendTransaction(tx, connection, { skipPreflight: false });
+  await connection.confirmTransaction(sig, "confirmed");
+  return sig;
+}
+
+export async function getTokenBalance(connection, userPublicKey, tokenMint) {
+  try {
+    const mint = new PublicKey(tokenMint);
+    const user = new PublicKey(userPublicKey);
+    const ata = await getAssociatedTokenAddress(mint, user);
+    const info = await connection.getTokenAccountBalance(ata);
+    return Number(info.value.uiAmount || 0);
+  } catch {
+    return 0;
+  }
 }

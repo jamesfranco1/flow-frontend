@@ -3,7 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import dynamic from "next/dynamic";
-import { wrapAndApprove } from "../utils/solana";
+import {
+  wrapAndApprove,
+  approveToken,
+  isNativeMint,
+  getTokenBalance,
+} from "../utils/solana";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -22,50 +27,87 @@ export default function WalletPanel({
   const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const [busy, setBusy] = useState(false);
-  const [balance, setBalance] = useState(null);
+  const [solBalance, setSolBalance] = useState(null);
+  const [tokenBalance, setTokenBalance] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [payWith, setPayWith] = useState("sol");
+  const [config, setConfig] = useState(null);
 
   const gatewayPubkey = useMemo(
     () => process.env.NEXT_PUBLIC_GATEWAY_PUBKEY || "",
     []
   );
+
   const ratePerSecond = content?.ratePerSecond || 1000;
-  const rateSol = (ratePerSecond / 1e9).toFixed(6);
-  const creatorShare = (ratePerSecond / 2 / 1e9).toFixed(6);
+  const decimals = config?.tokenDecimals || 9;
+  const divisor = Math.pow(10, decimals);
+  const rateDisplay = (ratePerSecond / divisor).toFixed(6);
+  const creatorShare = (ratePerSecond / 2 / divisor).toFixed(6);
   const burnShare = creatorShare;
 
+  const hasToken = config && !isNativeMint(config.tokenMint);
+  const payLabel = payWith === "sol" ? "SOL" : "FLOW";
+
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    fetch(`${API}/config`)
+      .then((r) => r.json())
+      .then(setConfig)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!connected || !publicKey || !connection) return;
     let cancelled = false;
 
-    const fetchBalance = async () => {
+    const fetchBalances = async () => {
       try {
         const lamports = await connection.getBalance(publicKey);
-        if (!cancelled) setBalance(lamports / 1e9);
+        if (!cancelled) setSolBalance(lamports / 1e9);
       } catch (_) {}
+
+      if (hasToken && config.tokenMint) {
+        const tb = await getTokenBalance(
+          connection,
+          publicKey.toString(),
+          config.tokenMint
+        );
+        if (!cancelled) setTokenBalance(tb);
+      }
     };
 
-    fetchBalance();
-    const interval = setInterval(fetchBalance, 10000);
+    fetchBalances();
+    const interval = setInterval(fetchBalances, 10000);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [connected, publicKey, connection]);
+  }, [connected, publicKey, connection, hasToken, config]);
 
   async function handleApprove() {
     if (!connected || !publicKey) return;
     setBusy(true);
     try {
-      await wrapAndApprove({
-        userPublicKey: publicKey,
-        sendTransaction,
-        connection,
-        gatewayPubkey,
-        amountLamports: ratePerSecond * 600,
-      });
+      if (payWith === "token" && hasToken) {
+        await approveToken({
+          userPublicKey: publicKey,
+          sendTransaction,
+          connection,
+          gatewayPubkey,
+          tokenMint: config.tokenMint,
+          tokenDecimals: config.tokenDecimals,
+          amount: ratePerSecond * 600,
+        });
+      } else {
+        await wrapAndApprove({
+          userPublicKey: publicKey,
+          sendTransaction,
+          connection,
+          gatewayPubkey,
+          amountLamports: ratePerSecond * 600,
+        });
+      }
 
       await fetch(`${API}/start`, {
         method: "POST",
@@ -107,18 +149,51 @@ export default function WalletPanel({
 
       {connected && publicKey && (
         <>
-          {balance !== null && (
-            <div className="text-sm text-gray-300 mb-4">
-              Balance: <b>{balance.toFixed(4)} SOL</b>
+          <div className="text-sm text-gray-300 mb-2 space-y-1">
+            {solBalance !== null && (
+              <div>
+                SOL: <b>{solBalance.toFixed(4)}</b>
+              </div>
+            )}
+            {hasToken && tokenBalance !== null && (
+              <div>
+                FLOW: <b>{tokenBalance.toFixed(4)}</b>
+              </div>
+            )}
+          </div>
+
+          {hasToken && (
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setPayWith("sol")}
+                className={`text-xs px-3 py-1 rounded border transition ${
+                  payWith === "sol"
+                    ? "border-white text-white bg-white/5"
+                    : "border-neutral-700 text-gray-400 hover:text-white"
+                }`}
+              >
+                Pay with SOL
+              </button>
+              <button
+                onClick={() => setPayWith("token")}
+                className={`text-xs px-3 py-1 rounded border transition ${
+                  payWith === "token"
+                    ? "border-white text-white bg-white/5"
+                    : "border-neutral-700 text-gray-400 hover:text-white"
+                }`}
+              >
+                Pay with FLOW
+              </button>
             </div>
           )}
 
           <div className="text-sm text-gray-300 mb-2">
-            Rate: <b>{rateSol} SOL/s</b>
+            Rate: <b>{rateDisplay} {payLabel}/s</b>
           </div>
           <div className="text-xs text-gray-500 mb-4 space-y-1">
             <div>
-              Creator: {creatorShare} SOL/s &middot; Burn: {burnShare} SOL/s
+              Creator: {creatorShare} {payLabel}/s &middot; Burn: {burnShare}{" "}
+              {payLabel}/s
             </div>
           </div>
 
