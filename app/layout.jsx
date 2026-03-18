@@ -5,6 +5,10 @@ export const metadata = {
   title: "flow402",
   description:
     "Pay-per-second streaming content on Solana. Watch, create, and earn.",
+  icons: {
+    icon: "/flowpfp.png",
+    apple: "/flowpfp.png",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -25,7 +29,7 @@ function Header() {
     <header className="fixed top-0 left-0 right-0 z-20 bg-black/40 backdrop-blur-md border-b border-neutral-800">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         <a href="/" className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-300 shadow-[0_0_12px_rgba(255,255,255,0.3)]" />
+          <img src="/flowpfp.png" alt="flow402" className="w-6 h-6 rounded" />
           <span className="font-semibold tracking-tight">flow402</span>
         </a>
         <div className="flex items-center gap-6 text-sm text-gray-300">
