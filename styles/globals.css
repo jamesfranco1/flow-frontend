@@ -38,25 +38,25 @@ body {
 }
 
 .button-primary {
-  @apply bg-white text-black font-semibold rounded-lg px-6 py-3 transition duration-200;
+  @apply bg-white/5 border border-white/60 text-white font-semibold rounded-lg px-6 py-3 backdrop-blur-sm transition duration-200;
 }
 .button-primary:hover {
-  background: #f8f8f8;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+  @apply bg-white/10 border-white/80;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.06);
 }
 
 .button-secondary {
-  @apply bg-neutral-900 border border-neutral-800 text-white rounded-lg px-6 py-3 transition duration-200;
+  @apply bg-white/5 border border-neutral-700 text-white rounded-lg px-6 py-3 backdrop-blur-sm transition duration-200;
 }
 .button-secondary:hover {
-  @apply bg-neutral-800;
+  @apply bg-white/10 border-neutral-500;
 }
 
 .button-stop {
-  @apply bg-neutral-900 border border-neutral-700 text-gray-300 rounded-lg px-6 py-3 transition duration-200;
+  @apply bg-white/5 border border-neutral-700 text-gray-300 rounded-lg px-6 py-3 backdrop-blur-sm transition duration-200;
 }
 .button-stop:hover {
-  @apply bg-neutral-800 text-white;
+  @apply bg-white/10 border-neutral-500 text-white;
 }
 
 .fade-in {
