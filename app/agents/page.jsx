@@ -56,7 +56,7 @@ export default function AgentsPage() {
         </FadeIn>
 
         <FadeIn>
-          <section className="space-y-4">
+          <section className="glass rounded-2xl p-8 space-y-4">
             <h2 className="text-sm uppercase tracking-widest text-gray-500">
               How it works
             </h2>
