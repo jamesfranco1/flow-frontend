@@ -1,6 +1,5 @@
 import "./../styles/globals.css";
 import Providers from "./providers";
-import Link from "next/link";
 
 export const metadata = {
   title: "flow402",
@@ -15,16 +14,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-gradient-to-b from-black via-[#0a0a0a] to-black text-white antialiased">
         <Providers>
-          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-            <div className="absolute inset-0 bg-mesh opacity-90" />
-            <div className="absolute inset-0 bg-grid opacity-[0.05] [background-size:72px_72px]" />
-            <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/[0.04] to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/60 to-transparent" />
-          </div>
           <Header />
-          <div className="page-shell pt-24">{children}</div>
+          <div className="pt-20">{children}</div>
         </Providers>
       </body>
     </html>
@@ -33,27 +26,31 @@ export default function RootLayout({ children }) {
 
 function Header() {
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 px-4 pt-4 sm:px-6">
-      <nav className="nav-shell mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-3">
-          <img src="/flowpfp.png" alt="flow402" className="h-8 w-8 rounded-xl border border-white/10 object-cover" />
-          <div>
-            <span className="block font-semibold tracking-tight text-white">flow402</span>
-            <span className="hidden text-[11px] uppercase tracking-[0.24em] text-white/40 sm:block">
-              streaming finance
-            </span>
-          </div>
-        </Link>
-        <div className="flex items-center gap-5 text-sm text-gray-300">
-          <Link href="/browse" className="hover:text-white transition">
+    <header className="fixed top-0 left-0 right-0 z-20 bg-black/40 backdrop-blur-md border-b border-neutral-800">
+      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <a href="/" className="flex items-center gap-2">
+          <img src="/flowpfp.png" alt="flow402" className="w-6 h-6 rounded" />
+          <span className="font-semibold tracking-tight">flow402</span>
+        </a>
+        <div className="flex items-center gap-6 text-sm text-gray-300">
+          <a
+            href="/browse"
+            className="hover:text-white transition"
+          >
             Browse
-          </Link>
-          <Link href="/agents" className="hover:text-white transition">
+          </a>
+          <a
+            href="/agents"
+            className="hover:text-white transition"
+          >
             Agents
-          </Link>
-          <Link href="/docs" className="hover:text-white transition">
+          </a>
+          <a
+            href="/docs"
+            className="hover:text-white transition"
+          >
             Docs
-          </Link>
+          </a>
           <a
             href="https://github.com/JamieMay2020/flow402/tree/main"
             target="_blank"
