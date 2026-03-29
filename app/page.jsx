@@ -41,7 +41,7 @@ export default function Landing() {
       {/* Hero */}
       <section className="min-h-screen grid place-items-center text-center px-6">
         <div>
-          <h1 className="text-5xl sm:text-7xl font-bold mb-4 tracking-tight">
+          <h1 className="text-5xl sm:text-7xl font-bold mb-4 tracking-tight bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
             flow402
           </h1>
           <p className="text-gray-400 text-lg sm:text-xl mb-2 max-w-xl mx-auto">
@@ -79,6 +79,8 @@ export default function Landing() {
         </section>
       </FadeIn>
 
+      <div className="divider max-w-5xl mx-auto" />
+
       {/* How it works */}
       <FadeIn>
         <section className="max-w-5xl mx-auto px-6 py-24">
@@ -109,6 +111,8 @@ export default function Landing() {
           </div>
         </section>
       </FadeIn>
+
+      <div className="divider max-w-5xl mx-auto" />
 
       {/* Featured */}
       {featured.length > 0 && (
@@ -167,6 +171,8 @@ export default function Landing() {
         </FadeIn>
       )}
 
+      <div className="divider max-w-5xl mx-auto" />
+
       {/* CTA */}
       <FadeIn>
         <section className="max-w-3xl mx-auto px-6 py-24 text-center space-y-6">
@@ -188,10 +194,6 @@ export default function Landing() {
         </section>
       </FadeIn>
 
-      {/* Footer */}
-      <footer className="text-center text-gray-500 text-sm py-16 border-t border-neutral-800">
-        &copy; 2026 flow402 — open-source protocol built on Solana.
-      </footer>
     </main>
   );
 }

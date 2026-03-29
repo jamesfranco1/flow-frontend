@@ -123,9 +123,6 @@ export default function AgentsPage() {
           </div>
         </FadeIn>
 
-        <footer className="text-center text-gray-500 text-sm py-16 border-t border-neutral-800">
-          &copy; 2026 flow402 — open-source protocol built on Solana.
-        </footer>
       </div>
     </main>
   );
