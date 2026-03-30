@@ -11,6 +11,11 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const [tokenMint, setTokenMint] = useState("");
+  const [agentWallet, setAgentWallet] = useState("");
+  const [settingsStatus, setSettingsStatus] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+
   const fetchPending = useCallback(async (key) => {
     setLoading(true);
     setError(null);
@@ -30,10 +35,33 @@ export default function AdminPage() {
     }
   }, []);
 
+  const fetchSettings = useCallback(async (key) => {
+    try {
+      const res = await fetch(`${API}/admin/settings`, {
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setTokenMint(data.tokenMint || "");
+      setAgentWallet(data.agentWallet || "");
+    } catch (_) {}
+  }, []);
+
   function handleLogin(e) {
     e.preventDefault();
+    localStorage.setItem("flow402_admin_key", apiKey);
     fetchPending(apiKey);
+    fetchSettings(apiKey);
   }
+
+  useEffect(() => {
+    const saved = localStorage.getItem("flow402_admin_key");
+    if (saved) {
+      setApiKey(saved);
+      fetchPending(saved);
+      fetchSettings(saved);
+    }
+  }, [fetchPending, fetchSettings]);
 
   async function handleAction(id, action) {
     try {
@@ -48,6 +76,31 @@ export default function AdminPage() {
     }
   }
 
+  async function handleSaveSettings() {
+    setSettingsLoading(true);
+    setSettingsStatus(null);
+    try {
+      const res = await fetch(`${API}/admin/settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ tokenMint, agentWallet }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSettingsStatus({ ok: false, msg: data.error || "Failed to save" });
+      } else {
+        setSettingsStatus({ ok: true, msg: "Saved" });
+      }
+    } catch (e) {
+      setSettingsStatus({ ok: false, msg: e.message });
+    } finally {
+      setSettingsLoading(false);
+    }
+  }
+
   if (!authed) {
     return (
       <main className="min-h-screen text-white flex items-center justify-center px-6">
@@ -57,7 +110,7 @@ export default function AdminPage() {
         >
           <h1 className="text-xl font-bold">Admin</h1>
           <p className="text-sm text-gray-400">
-            Enter the API key to view pending submissions.
+            Enter the API key to access admin settings.
           </p>
           <input
             type="password"
@@ -83,9 +136,55 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen text-white">
       <div className="max-w-4xl mx-auto px-6 py-16">
+
+        {/* Settings */}
+        <div className="mb-12">
+          <h1 className="text-3xl font-bold mb-6">Settings</h1>
+          <div className="glass p-6 rounded-xl space-y-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Token CA (mint address)</label>
+              <input
+                type="text"
+                value={tokenMint}
+                onChange={(e) => setTokenMint(e.target.value.trim())}
+                placeholder="e.g. EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                className="w-full bg-black/60 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-white font-mono placeholder-gray-600 focus:outline-none focus:border-neutral-500 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Agent Wallet (receives SOL for buyback)</label>
+              <input
+                type="text"
+                value={agentWallet}
+                onChange={(e) => setAgentWallet(e.target.value.trim())}
+                placeholder="e.g. 8wudPsbmTZB6b8rRzGXXWpAw5gBAy4ASoqSGEJZvwdkk"
+                className="w-full bg-black/60 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-white font-mono placeholder-gray-600 focus:outline-none focus:border-neutral-500 transition"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSaveSettings}
+                disabled={settingsLoading}
+                className="button-primary disabled:opacity-50"
+              >
+                {settingsLoading ? "Saving\u2026" : "Save"}
+              </button>
+              {settingsStatus && (
+                <span className={`text-sm ${settingsStatus.ok ? "text-green-400" : "text-red-400"}`}>
+                  {settingsStatus.msg}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-600">
+              Leave Token CA empty to use native SOL. Agent wallet is where 50% of every payment goes for buyback.
+            </p>
+          </div>
+        </div>
+
+        {/* Pending Submissions */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Pending Submissions</h1>
+            <h2 className="text-3xl font-bold">Pending Submissions</h2>
             <p className="text-sm text-gray-400 mt-1">
               {pending.length} item{pending.length !== 1 ? "s" : ""} waiting for
               review

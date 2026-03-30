@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { href: "/agents", label: "Agents" },
   { href: "/publish", label: "Publish" },
   { href: "/docs", label: "Docs" },
+  { href: "/admin", label: "Admin" },
 ];
 
 export default function Header() {
